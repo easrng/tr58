@@ -1,11 +1,12 @@
 {
-  "name": "tr58",
+  "name": "@easrng/tr58",
   "version": "0.0.1",
   "description": "an implementation of UTS #58 link detection",
   "author": "easrng",
   "license": "MIT",
   "keywords": [
     "tr58",
+    "uts58",
     "linkify"
   ],
   "exports": "./dist/index.js",
@@ -15,7 +16,7 @@
   "type": "module",
   "scripts": {
     "build": "node --run generate && tsc -b",
-    "test": "node --test",
+    "test": "node --test && node --run build && node --run example",
     "generate": "node scripts/generate.ts",
     "data:download": "wget https://www.unicode.org/Public/17.0.0/linkification/Link{Bracket,Email,Term,DetectionTest}.txt -P data",
     "format": "prettier -w .",

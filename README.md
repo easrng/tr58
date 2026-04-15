@@ -1,17 +1,17 @@
-# tr58
+# @easrng/tr58
 
 an implementation of [UTS #58](https://www.unicode.org/reports/tr58/) link detection
 
 ## install
 
 ```
-pnpm i tr58
+pnpm i @easrng/tr58
 ```
 
 ## usage
 
 ```js
-import { tokenize } from "tr58";
+import { tokenize } from "@easrng/tr58";
 
 const sample =
   "here's a link: https://en.wikipedia.org/wiki/Electric_bus_(disambiguation).\n" +
