@@ -1,0 +1,34 @@
+{
+  "name": "tr58",
+  "version": "0.0.1",
+  "description": "an implementation of UTS #58 link detection",
+  "author": "easrng",
+  "license": "MIT",
+  "keywords": [
+    "tr58",
+    "linkify"
+  ],
+  "exports": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "node --run generate && tsc -b",
+    "test": "node --test",
+    "generate": "node scripts/generate.ts",
+    "data:download": "wget https://www.unicode.org/Public/17.0.0/linkification/Link{Bracket,Email,Term,DetectionTest}.txt -P data",
+    "format": "prettier -w .",
+    "example": "node --import ./scripts/md-loader.ts README.md"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/regexgen": "^1.3.3",
+    "@unicode/unicode-15.0.0": "^1.6.16",
+    "prettier": "^3.8.3",
+    "public-suffix-list": "github:publicsuffix/list#8f9e04f2be9098ada07aa3cf13592dfe78870985",
+    "regexgen": "^1.3.0",
+    "typescript": "^6.0.2"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

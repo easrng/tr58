@@ -1,0 +1,12 @@
+{
+  "include": ["scripts", "test"],
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/tsconfig.node.tsbuildinfo",
+    "rootDir": ".",
+    "outDir": "node_modules/.i_dont_actually_want_emit_thx",
+    "composite": true,
+    "types": ["node"],
+    "lib": ["ESNext"]
+  },
+  "extends": "./tsconfig.json"
+}
