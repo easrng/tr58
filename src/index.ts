@@ -34,7 +34,7 @@ export type Token = { type: "Text" | "URL"; value: string };
 export function* tokenize(
   input: string,
   options?: {
-    nonStandard?: { domainHandle?: boolean; email?: boolean; tags: string[] };
+    nonStandard?: { domainHandle?: boolean; email?: boolean; tags?: string[] };
   },
 ): Generator<Token> {
   const emailSupport = options?.nonStandard?.email ?? true;
