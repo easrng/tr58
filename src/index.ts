@@ -28,27 +28,61 @@ function getLinkTerm(char: string) {
   return "Hard";
 }
 
+const tagsMap = new WeakMap();
+
 export type Token = { type: "Text" | "URL"; value: string };
-export function* tokenize(input: string): Generator<Token> {
+export function* tokenize(
+  input: string,
+  options?: {
+    nonStandard?: { domainHandle?: boolean; email?: boolean; tags: string[] };
+  },
+): Generator<Token> {
+  const emailSupport = options?.nonStandard?.email ?? true;
+  const handleSupport = options?.nonStandard?.domainHandle ?? false;
   let pos = 0;
   let lastYieldedPos = 0;
   const n = input.length;
+  let startRE;
+
+  const tags = options?.nonStandard?.tags;
+  if (tags) {
+    const cached = tagsMap.get(tags);
+    if (cached) {
+      startRE = cached;
+    } else {
+      startRE = new RegExp(
+        START_RE.source +
+          "|(?<tag>" +
+          tags
+            .map((s) =>
+              [...s]
+                .map((s) => `\\u{${s.codePointAt(0)!.toString(16)}}`)
+                .join(""),
+            )
+            .join("|") +
+          ")",
+        START_RE.flags,
+      );
+      tagsMap.set(tags, startRE);
+    }
+  } else {
+    startRE = START_RE;
+  }
 
   while (pos < n) {
-    START_RE.lastIndex = pos;
-    const match = START_RE.exec(input);
+    startRE.lastIndex = pos;
+    const match = startRE.exec(input);
     if (!match) break;
 
-    const { scheme, domain } = match.groups!;
+    const { scheme, domain, tag } = match.groups!;
     let matchStart = match.index;
     const email = AT_RE.test(input[matchStart - 1]!);
     let linkEnd = matchStart;
     let part = "none";
     const openStack = [];
     const limit = 125;
-    const n = input.length;
 
-    for (let i = matchStart; i < n; i++) {
+    for (let i = matchStart + (tag?.length ?? 0); i < n; i++) {
       const char = input[i]!;
       let nextPart = part;
       if (part === "none" || part === "Path") {
@@ -74,7 +108,7 @@ export function* tokenize(input: string): Generator<Token> {
       ) {
         openStack.length = 0;
         part = nextPart;
-        if (email) {
+        if (email || tag) {
           break;
         }
         linkEnd = i + 1;
@@ -110,8 +144,7 @@ export function* tokenize(input: string): Generator<Token> {
       }
     }
 
-    let isURL = !!scheme;
-
+    let isURL = !domain;
     if (domain) {
       const precedingTerm = getLinkTerm(
         matchStart > 0 ? input[matchStart - 1]! : "",
@@ -131,16 +164,17 @@ export function* tokenize(input: string): Generator<Token> {
             const userinfo = input
               .slice(lastYieldedPos, matchStart - 1)
               .match(USER_INFO_RE);
-            if (userinfo) {
+            if (userinfo && emailSupport) {
               matchStart -= userinfo[0].length + 1;
             } else {
-              isURL = false;
+              if ((isURL = handleSupport)) {
+                matchStart--;
+              }
             }
           }
         }
       }
     }
-
     if (isURL) {
       if (matchStart > lastYieldedPos) {
         yield { type: "Text", value: input.slice(lastYieldedPos, matchStart) };
@@ -148,7 +182,8 @@ export function* tokenize(input: string): Generator<Token> {
       const rawLink = input.slice(matchStart, linkEnd);
       // validate userinfo and domain
       const valid =
-        /^(?:[a-z][a-z0-9+.-]*:\/\/)(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*\.?([/?#]|$)|^mailto:(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*@(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*$/.test(
+        tag ||
+        /^(?:[a-z][a-z0-9+.-]*:\/\/)(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*\.?([/?#]|$)|^mailto:(?:(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*)?@(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*$/.test(
           (scheme || email ? "" : "https://") +
             (email ? rawLink.replace(/^(mailto:)?/i, "mailto:") : rawLink)
               .replace(DOT_RE, ".")

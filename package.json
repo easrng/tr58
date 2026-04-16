@@ -1,6 +1,6 @@
 {
   "name": "@easrng/tr58",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "an implementation of UTS #58 link detection",
   "author": "easrng",
   "license": "MIT",
@@ -20,7 +20,8 @@
     "generate": "node scripts/generate.ts",
     "data:download": "wget https://www.unicode.org/Public/17.0.0/linkification/Link{Bracket,Email,Term,DetectionTest}.txt -P data",
     "format": "prettier -w .",
-    "example": "node --import ./scripts/md-loader.ts README.md"
+    "example": "node --import ./scripts/md-loader.ts README.md",
+    "example:update": "node --run example | sponge README.md"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
