@@ -12,9 +12,8 @@ interface URL {
   username: string;
 }
 declare var URL: {
-  new(url: string | URL, base?: string | URL): URL;
+  new (url: string | URL, base?: string | URL): URL;
 };
 declare var console: {
-  warn(str: string): void
+  warn(str: string): void;
 };
-

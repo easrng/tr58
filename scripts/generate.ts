@@ -167,6 +167,7 @@ const psl = [
       .filter((e) => e[1] && e[1] !== "/")
       .map((e) => new URL("https://" + e.split(".").at(-1)).hostname),
   ),
+  "test",
 ].sort();
 const rg = (a: string[]) => regexgen(a).source.replace(/\(\?:/g, "(");
 out += `export const TLD = /^(${rg(psl.filter((e) => e.length === 2)) + "|" + rg(psl.filter((e) => e.startsWith("xn--"))).replace("xn\\-\\-((vermgensberat(ung\\-pw|er\\-ct", "xn--((vermgensberat(ung-pw|er-ct") + "|" + rg(psl.filter((e) => e.length !== 2 && !e.startsWith("xn--")))})$/\n`;

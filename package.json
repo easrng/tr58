@@ -1,6 +1,6 @@
 {
   "name": "@easrng/tr58",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "an implementation of UTS #58 link detection",
   "author": "easrng",
   "license": "MIT",

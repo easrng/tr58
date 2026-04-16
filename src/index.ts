@@ -16,12 +16,12 @@ const normalizeHost = (s: string) => {
 
 const USER_INFO_RE = new RegExp(`(mailto:)?${LinkEmail.source}+$`, "iu");
 const DOT_RE = /[.\u3002\uFF0E\uFF61]/gu;
-const AT_RE = /[\uff20@]/gu;
+const AT_RE = /[\uff20@]/u;
 const START_RE =
   /(?<scheme>[a-z][a-z0-9+.-]*:\/\/)|(?<domain>([-\p{L}\p{N}\p{M}\u00DF\u03C2\u06FD\u06FE\u0F0B\u3007]+[\.\u3002]){1,4}[-\p{L}\p{N}\p{M}]+(?![-\p{L}\p{N}\p{M}]))/giu;
 
 function getLinkTerm(char: string) {
-  if (LinkTermInclude.test(char)) return "Include";
+  if (LinkTermInclude.test(char) || /\p{Emoji}/u.test(char)) return "Include";
   if (LinkTermOpen.test(char)) return "Open";
   if (LinkTermClose.test(char)) return "Close";
   if (LinkTermSoft.test(char)) return "Soft";
@@ -52,15 +52,15 @@ export function* tokenize(
     } else {
       startRE = new RegExp(
         START_RE.source +
-        "|(?<tag>" +
-        tags
-          .map((s) =>
-            [...s]
-              .map((s) => `\\u{${s.codePointAt(0)!.toString(16)}}`)
-              .join(""),
-          )
-          .join("|") +
-        ")",
+          "|(?<tag>(?:" +
+          tags
+            .map((s) =>
+              [...s]
+                .map((s) => `\\u{${s.codePointAt(0)!.toString(16)}}`)
+                .join(""),
+            )
+            .join("|") +
+          ")(?!\uFE0F))",
         START_RE.flags,
       );
       tagsMap.set(tags, startRE);
@@ -73,8 +73,8 @@ export function* tokenize(
   while (pos < n) {
     if (pos === prevPos) {
       // failsafe, break out of infinite loop
-      console.warn('[@easrng/tr58] infinite loop detected!')
-      break
+      console.warn("[@easrng/tr58] infinite loop detected!");
+      break;
     }
     prevPos = pos;
     startRE.lastIndex = pos;
@@ -90,12 +90,15 @@ export function* tokenize(
     const limit = 125;
 
     for (let i = matchStart + (tag?.length ?? 0); i < n; i++) {
-      const char = input[i]!;
+      const char =
+        input.codePointAt(i)! > 0xffff ? input.slice(i, 1 + ++i) : input[i]!;
       let nextPart = part;
       if (part === "none" || part === "Path") {
-        if (char === "/" || char === ":") nextPart = "Path";
+        if (char === "/") nextPart = "Path";
+        else if ((email || tag) && char === ":") nextPart = "Path";
         else if (char === "?") nextPart = "Query";
-        else if (char === "#") nextPart = "Fragment";
+        else if (char === "#" && (tag ? input[i + 1] !== "\uFE0F" : true))
+          nextPart = "Fragment";
       } else if (part === "Query") {
         if (char === "#") nextPart = "Fragment";
       } else if (part === "Fragment") {
@@ -153,7 +156,7 @@ export function* tokenize(
 
     let isURL = !!scheme;
     if (tag) {
-      isURL = linkEnd !== matchStart
+      isURL = linkEnd !== matchStart;
     }
     if (domain) {
       const precedingTerm = getLinkTerm(
@@ -195,9 +198,9 @@ export function* tokenize(
         tag ||
         /^(?:[a-z][a-z0-9+.-]*:\/\/)(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*\.?([/?#]|$)|^mailto:(?:(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*)?@(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*$/.test(
           (scheme || email ? "" : "https://") +
-          (email ? rawLink.replace(/^(mailto:)?/i, "mailto:") : rawLink)
-            .replace(DOT_RE, ".")
-            .replace(AT_RE, "@"),
+            (email ? rawLink.replace(/^(mailto:)?/i, "mailto:") : rawLink)
+              .replace(DOT_RE, ".")
+              .replace(AT_RE, "@"),
         );
       yield { type: valid ? "URL" : "Text", value: rawLink };
       pos = linkEnd;
