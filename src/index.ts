@@ -52,15 +52,15 @@ export function* tokenize(
     } else {
       startRE = new RegExp(
         START_RE.source +
-          "|(?<tag>" +
-          tags
-            .map((s) =>
-              [...s]
-                .map((s) => `\\u{${s.codePointAt(0)!.toString(16)}}`)
-                .join(""),
-            )
-            .join("|") +
-          ")",
+        "|(?<tag>" +
+        tags
+          .map((s) =>
+            [...s]
+              .map((s) => `\\u{${s.codePointAt(0)!.toString(16)}}`)
+              .join(""),
+          )
+          .join("|") +
+        ")",
         START_RE.flags,
       );
       tagsMap.set(tags, startRE);
@@ -69,7 +69,14 @@ export function* tokenize(
     startRE = START_RE;
   }
 
+  let prevPos;
   while (pos < n) {
+    if (pos === prevPos) {
+      // failsafe, break out of infinite loop
+      console.warn('[@easrng/tr58] infinite loop detected!')
+      break
+    }
+    prevPos = pos;
     startRE.lastIndex = pos;
     const match = startRE.exec(input);
     if (!match) break;
@@ -144,7 +151,10 @@ export function* tokenize(
       }
     }
 
-    let isURL = !domain;
+    let isURL = !!scheme;
+    if (tag) {
+      isURL = linkEnd !== matchStart
+    }
     if (domain) {
       const precedingTerm = getLinkTerm(
         matchStart > 0 ? input[matchStart - 1]! : "",
@@ -185,9 +195,9 @@ export function* tokenize(
         tag ||
         /^(?:[a-z][a-z0-9+.-]*:\/\/)(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*\.?([/?#]|$)|^mailto:(?:(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*)?@(?:[^@/?#.-]([^@/?#.]*[^@/?#.-])?)(?:\.[^@/?#.-]([^@/?#.]*[^@/?#.-])?)*$/.test(
           (scheme || email ? "" : "https://") +
-            (email ? rawLink.replace(/^(mailto:)?/i, "mailto:") : rawLink)
-              .replace(DOT_RE, ".")
-              .replace(AT_RE, "@"),
+          (email ? rawLink.replace(/^(mailto:)?/i, "mailto:") : rawLink)
+            .replace(DOT_RE, ".")
+            .replace(AT_RE, "@"),
         );
       yield { type: valid ? "URL" : "Text", value: rawLink };
       pos = linkEnd;

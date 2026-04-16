@@ -6,7 +6,7 @@
     "target": "esnext",
     "rootDir": "src",
     "outDir": "dist",
-    "types": ["./url.d.ts"],
+    "types": ["./global.d.ts"],
     "lib": ["ES2024"],
     "declaration": true,
     "noUncheckedIndexedAccess": true,

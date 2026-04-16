@@ -48,7 +48,7 @@ import { tokenize } from "@easrng/tr58";
 const tags = ["#", "＃", "$"];
 
 for (const token of tokenize(
-  "hey@bsky.app, if DOS could edit (en.wikipedia.org/wiki/Edit_(MS-DOS)) why can't you #Blue.Wave.26. https://en.wikipedia.org/wiki/Main_Page#mp-otd-h2 $AAPL ＃ｒｋｇｋ",
+  "hey@bsky.app, if DOS could edit (en.wikipedia.org/wiki/Edit_(MS-DOS)) why can't you #Blue.Wave.26. https://en.wikipedia.org/wiki/Main_Page#mp-otd-h2 $AAPL ＃ｒｋｇｋ ＃",
   {
     nonStandard: { domainHandle: true, email: false, tags },
   },
@@ -73,4 +73,6 @@ for (const token of tokenize(
 { type: 'URL', value: '$AAPL' }
 { type: 'Text', value: ' ' }
 { type: 'URL', value: '＃ｒｋｇｋ' }
+{ type: 'Text', value: ' ＃' }
 ```
+
