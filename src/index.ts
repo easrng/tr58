@@ -18,7 +18,7 @@ const USER_INFO_RE = new RegExp(`(mailto:)?${LinkEmail.source}+$`, "iu");
 const DOT_RE = /[.\u3002\uFF0E\uFF61]/gu;
 const AT_RE = /[\uff20@]/u;
 const START_RE =
-  /(?<scheme>[a-z][a-z0-9+.-]*:\/\/)|(?<domain>([-\p{L}\p{N}\p{M}\u00DF\u03C2\u06FD\u06FE\u0F0B\u3007]+[\.\u3002]){1,4}[-\p{L}\p{N}\p{M}]+(?![-\p{L}\p{N}\p{M}]))/giu;
+  /(?<scheme>(?![a-z0-9+.-]+(?:file|ftp|https?):)[a-z][a-z0-9+.-]*:\/\/)|(?<domain>([-\p{L}\p{N}\p{M}\u00DF\u03C2\u06FD\u06FE\u0F0B\u3007]+[\.\u3002]){1,4}[-\p{L}\p{N}\p{M}]+(?![-\p{L}\p{N}\p{M}]))/giu;
 
 function getLinkTerm(char: string) {
   if (LinkTermInclude.test(char) || /\p{Emoji}/u.test(char)) return "Include";
@@ -94,7 +94,7 @@ export function* tokenize(
         input.codePointAt(i)! > 0xffff ? input.slice(i, 1 + ++i) : input[i]!;
       let nextPart = part;
       if (part === "none" || part === "Path") {
-        if (char === "/") nextPart = "Path";
+        if (char === "/" || char === "\\") nextPart = "Path";
         else if ((email || tag) && char === ":") nextPart = "Path";
         else if (char === "?") nextPart = "Query";
         else if (char === "#" && (tag ? input[i + 1] !== "\uFE0F" : true))
